@@ -22,12 +22,17 @@
                     <artifactSet>
                         <includes>
                             <include>fr.zcraft:quartzlib</include>
+                            <include>org.bstats:bstats-bukkit</include>
                         </includes>
                     </artifactSet>
                     <relocations>
                         <relocation>
                             <pattern>fr.zcraft.quartzlib</pattern>
                             <shadedPattern>YOUR.OWN.PACKAGE.quartzlib</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>fr.moribus.imageonmap</shadedPattern>
                         </relocation>
                     </relocations>
                     <minimizeJar>true</minimizeJar>

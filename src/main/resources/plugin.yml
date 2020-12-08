@@ -4,6 +4,8 @@ version: "4.0"
 api-version: "1.13"
 
 commands:
+   latex:
+      description: render LaTeX in a map
    tomap:
       description: render an image in a map
       usage: /<command> [URL]
@@ -18,6 +20,7 @@ permissions:
         default: true
         children:
             imageonmap.userender: true
+            imageonmap.latex: true
             imageonmap.new: true
             imageonmap.list: true
             imageonmap.listother: true
@@ -32,6 +35,10 @@ permissions:
             imageonmap.bypasssize: false
             imageonmap.update: true
             imageonmap.updateother: false
+
+    imageonmap.latex:
+        description: "Renders a given LaTeX formula to a map"
+        default: true
 
     imageonmap.userender:
         description: "Allows you to use /tomap and related commands (/maptool getremaining). Alias of imageonmap.new."

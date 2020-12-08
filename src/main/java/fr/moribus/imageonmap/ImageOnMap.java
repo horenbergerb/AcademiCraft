@@ -60,15 +60,18 @@ import java.io.IOException;
 public final class ImageOnMap extends QuartzPlugin
 {
     static private final String IMAGES_DIRECTORY_NAME = "images";
+    static private final String LATEX_DIRECTORY_NAME = "latex";
     static private final String MAPS_DIRECTORY_NAME = "maps";
     static private ImageOnMap plugin;
     private File imagesDirectory;
+    private File latexDirectory;
     private final File mapsDirectory;
 
     public ImageOnMap()
     {
         imagesDirectory = new File(this.getDataFolder(), IMAGES_DIRECTORY_NAME);
         mapsDirectory = new File(this.getDataFolder(), MAPS_DIRECTORY_NAME);
+        latexDirectory = new File(this.getDataFolder(), LATEX_DIRECTORY_NAME);
         plugin = this;
     }
 
@@ -79,6 +82,7 @@ public final class ImageOnMap extends QuartzPlugin
     
     public File getImagesDirectory() {return imagesDirectory;}
     public File getMapsDirectory() {return mapsDirectory;}
+    public File getLatexDirectory() {return latexDirectory;}
     public File getImageFile(int mapID)
     {
         return new File(imagesDirectory, "map"+mapID+".png");
@@ -94,6 +98,7 @@ public final class ImageOnMap extends QuartzPlugin
         {
             imagesDirectory = checkPluginDirectory(imagesDirectory, V3Migrator.getOldImagesDirectory(this));
             checkPluginDirectory(mapsDirectory);
+            checkPluginDirectory(latexDirectory);
         }
         catch(final IOException ex)
         {
@@ -117,6 +122,7 @@ public final class ImageOnMap extends QuartzPlugin
 
         Commands.register(
                 "maptool",
+                LatexCommand.class,
                 NewCommand.class,
                 ListCommand.class,
                 ListOtherCommand.class,
@@ -132,6 +138,7 @@ public final class ImageOnMap extends QuartzPlugin
                 UpdateCommand.class
         );
 
+        Commands.registerShortcut("maptool", LatexCommand.class, "latex");
         Commands.registerShortcut("maptool", NewCommand.class, "tomap");
         Commands.registerShortcut("maptool", ExploreCommand.class, "maps");
 

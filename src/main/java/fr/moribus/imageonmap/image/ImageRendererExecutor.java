@@ -36,6 +36,9 @@
 
 package fr.moribus.imageonmap.image;
 
+import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
+import fr.moribus.imageonmap.ImageOnMap;
 import fr.moribus.imageonmap.Permissions;
 import fr.moribus.imageonmap.PluginConfiguration;
 import fr.moribus.imageonmap.map.ImageMap;
@@ -45,12 +48,14 @@ import fr.zcraft.quartzlib.components.worker.Worker;
 import fr.zcraft.quartzlib.components.worker.WorkerAttributes;
 import fr.zcraft.quartzlib.components.worker.WorkerCallback;
 import fr.zcraft.quartzlib.components.worker.WorkerRunnable;
+import fr.zcraft.quartzlib.tools.text.ActionBar;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -157,6 +162,69 @@ public class ImageRendererExecutor extends Worker
         }, callback);
     }
 
+    static public void renderLatex(final String latexRaw, Player player, final ImageUtils.ScalingType scaling, final UUID playerUUID, final int width, final int height, WorkerCallback<ImageMap> callback)
+    {
+        submitQuery(new WorkerRunnable<ImageMap>()
+        {
+            @Override
+            public ImageMap run() throws Throwable {
+
+                BufferedImage image=null;
+
+                //RENDER LATEX HERE
+                try {
+                    player.sendMessage("Creating tex file...");
+                    //Creates a new tex file using the player's UUID as the name
+                    File texFile = new File(ImageOnMap.getPlugin().getLatexDirectory(), playerUUID.toString()+".tex");
+                    texFile.createNewFile();
+                    //Writes the function to the tex file
+                    FileWriter texWriter = new FileWriter(texFile,false);
+                    player.sendMessage("Writing to tex file...");
+                    texWriter.write(
+                            "\\documentclass[convert={density=300,size=128x128,outext=.png}]{standalone}\n" +
+                                    "\\nonstopmode\n" +
+                                    "\n" +
+                                    "\\usepackage{amsmath}\n" +
+                                    "\\usepackage{amsthm}\n" +
+                                    "\\usepackage{amsfonts}\n" +
+                                    "\\usepackage{amssymb}\n" +
+                                    "\\usepackage{tikz-cd}\n" +
+                                    "\n" +
+                                    "\\begin{document}\n" +
+                                    "$" + latexRaw + "$\n" +
+                            "\\end{document}"
+                    );
+                    texWriter.close();
+
+                    player.sendMessage("Running png conversion...");
+                    //Runs the shell code to generate the corresponding image
+                    String[] args = new String[] {"/usr/bin/latex", "-interaction=nonstopmode", "--shell-escape", playerUUID.toString()+".tex"};
+                    File stdout = new File(ImageOnMap.getPlugin().getLatexDirectory(), "stdout.txt");
+                    Process proc = new ProcessBuilder(args).redirectErrorStream(true).redirectOutput(stdout).directory(ImageOnMap.getPlugin().getLatexDirectory()).start();
+                    proc.waitFor();
+
+                    player.sendMessage("Attempting to open image...");
+                    //Opens the new image png
+                    image = ImageIO.read(new File(ImageOnMap.getPlugin().getLatexDirectory(), playerUUID.toString()+".png"));
+
+                }
+                catch(Exception e) {
+                    player.sendMessage("Something went wrong :(");
+                    throw new IOException(I.t(e.getMessage()));
+                }
+
+                if (image == null) throw new IOException(I.t("New code produced empty image :("));
+                // Limits are in place and the player does NOT have rights to avoid them.
+                checkSizeLimit(playerUUID, image);
+                if (scaling != ImageUtils.ScalingType.NONE && height <= 1 && width <= 1) {
+                    return renderSingle(scaling.resize(image, ImageMap.WIDTH, ImageMap.HEIGHT), playerUUID);
+                }
+                final BufferedImage resizedImage = scaling.resize(image, ImageMap.WIDTH * width, ImageMap.HEIGHT * height);
+                image.flush();
+                return renderPoster(resizedImage, playerUUID);
+            }
+        }, callback);
+    }
 
     public static void update(final URL url, final ImageUtils.ScalingType scaling, final UUID playerUUID, final ImageMap map, final int width, final int height, WorkerCallback<ImageMap> callback) {
         submitQuery(new WorkerRunnable<ImageMap>()

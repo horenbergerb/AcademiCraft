@@ -1,3 +1,36 @@
+AcademiCraft
+============
+
+This is just a few modifications to ImageOnMap, an amazing bukkit plugin published by zDevelopers.
+The goal is to provide features that make Minecraft a feasible medium for informal academic communication.
+
+## Features
+
+On top of the features of ImageOnMap, AcademiCraft lets you create LaTeX formulas in Minecraft.
+The command "/latex <formula>" creates a map which can be used in the same way as the maps from ImageOnMap.
+
+My next goal is to create a way to quickly convert powerpoints to Minecraft maps.
+
+A future goal would be to create a way to convert whole .tex files into Minecraft, potentially using books.
+
+## Requirements
+
+This code was written somewhat particularly for my own computer. It assumes you are using Ubuntu.
+Additionally, you must have the package "latex" installed at /usr/bin/latex
+
+I also had to move /etc/ImageMagic-6/policy.xml to /etc/ImageMagic-6/HIDDEN_policy.xml
+This is so that ImageMagic has necessary permissions to convert .tex files to .png.
+
+When you type formulas in "/latex <formula>," assume they are already contained between two dollar signs in LaTeX.
+
+## To Do
+
+Probably lots of bug-fixing. I barely got this running the other day. I should do more testing.
+
+I also want to get the "resize" command arguments working with the /latex command.
+
+I could also afford to make the README better, rather than just writing on top of the old README.
+
 ImageOnMap
 ==========
 

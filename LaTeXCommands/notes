@@ -1,0 +1,6 @@
+I moved
+/etc/ImageMagic-6/policy.xml
+to
+/etc/ImageMagic-6/HIDDEN_policy.xml
+
+So that I could complete the conversion process

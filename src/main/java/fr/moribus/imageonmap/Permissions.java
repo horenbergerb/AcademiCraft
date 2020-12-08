@@ -41,6 +41,7 @@ import org.bukkit.permissions.Permissible;
 
 public enum Permissions
 {
+    LATEX("imageonmap.latex"),
     NEW("imageonmap.new", "imageonmap.userender"),
     LIST("imageonmap.list"),
     LISTOTHER("imageonmap.listother"),
