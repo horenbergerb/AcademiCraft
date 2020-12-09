@@ -1,0 +1,10 @@
+I converted a beamer to png files using the following process:
+
+1) use latex command to parse into pdf
+2) convert -density 600x600 -resize 1024x768 -quality 90 presentation.pdf presentation.png
+3) profit
+
+output slides are named "presentation-1.png", "presentation-2.png", etc.
+
+used this source:
+http://pointsofsail.org/sort-of-converting-a-latexbeamerpdf-presentation-to-powerpoint/

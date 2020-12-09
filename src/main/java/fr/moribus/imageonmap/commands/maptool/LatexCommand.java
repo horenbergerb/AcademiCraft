@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 
 @CommandInfo (name = "latex", usageParameters = "<LaTeX Code>")
 public class LatexCommand  extends IoMCommand
@@ -34,8 +35,30 @@ public class LatexCommand  extends IoMCommand
 
         if(args.length < 1) throwInvalidArgument(I.t("You must provide LaTeX code."));
 
-        latexRaw = StringUtils.join(args, " ");
+        if(args.length >= 4){
+            if(args[args.length-3].equals("resize") || args[args.length-3].equals("resize-stretched") || args[args.length-3].equals("resize-covered")){
+                player.sendMessage("Detected resize request: " + args[args.length-2] + "x" + args[args.length-1]);
+                switch(args[args.length-3]) {
+                    case "resize": scaling = ImageUtils.ScalingType.CONTAINED; break;
+                    case "resize-stretched": scaling = ImageUtils.ScalingType.STRETCHED; break;
+                    case "resize-covered": scaling = ImageUtils.ScalingType.COVERED; break;
+                    default: throwInvalidArgument(I.t("Invalid Stretching mode.")); break;
+                }
 
+                width = Integer.parseInt(args[args.length-2]);
+                height = Integer.parseInt(args[args.length-1]);
+                String[] new_args = Arrays.copyOfRange(args, 0, args.length-3);
+
+                latexRaw = StringUtils.join(new_args, " ");
+                player.sendMessage("Parsing the following: " + latexRaw);
+            }
+            else{
+                latexRaw = StringUtils.join(args, " ");
+            }
+        }
+        else {
+            latexRaw = StringUtils.join(args, " ");
+        }
         //Don't have a good way to reconcile this with how I get the raw LaTeX code...
         /*
         if(args.length >= 2)
