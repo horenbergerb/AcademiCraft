@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,7 +31,7 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap.commands.maptool;
@@ -47,19 +47,19 @@ import fr.zcraft.quartzlib.components.commands.WithFlags;
 import fr.zcraft.quartzlib.components.i18n.I;
 import fr.zcraft.quartzlib.components.rawtext.RawText;
 import fr.zcraft.quartzlib.tools.PluginLogger;
+import fr.zcraft.quartzlib.tools.text.RawMessage;
+import java.util.ArrayList;
+import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
+@CommandInfo(name = "delete", usageParameters = "[player name]:<map name> [--confirm]")
+@WithFlags({"confirm"})
+public class DeleteCommand extends IoMCommand {
 
-@CommandInfo (name =  "delete", usageParameters = "<map name> [--confirm]")
-@WithFlags ({"confirm"})
-public class DeleteCommand extends IoMCommand
-{
-
-    private static RawText deleteMsg(Class klass,ImageMap map){
-       return new RawText(I.t("You are going to delete") + " ")
+    private static RawText deleteMsg(Class klass, String playerName, ImageMap map) {
+        return new RawText(I.t("You are going to delete") + " ")
                 .then(map.getId())
                 .color(ChatColor.GOLD)
                 .then(". " + I.t("Are you sure ? "))
@@ -67,50 +67,80 @@ public class DeleteCommand extends IoMCommand
                 .then(I.t("[Confirm]"))
                 .color(ChatColor.GREEN)
                 .hover(new RawText(I.t("{red}This map will be deleted {bold}forever{red}!")))
-                .command(klass, map.getId(), "--confirm")
+                .command(klass, playerName + ":" + "\"" + map.getId() + "\"", "--confirm")
                 .build();
     }
 
     @Override
-    protected void run() throws CommandException
-    {
-        ImageMap map = getMapFromArgs();
+    protected void run() throws CommandException {
+        ArrayList<String> arguments = getArgs();
+        final boolean confirm = hasFlag("confirm");
 
-        if (!hasFlag("confirm"))
-        {
-            RawText msg = deleteMsg(getClass(),map);
-            send(msg);
+        if (arguments.size() > 3 || (arguments.size() > 2 && !confirm)) {
+            throwInvalidArgument(I.t("Too many parameters!"));
+            return;
         }
-        else
-        {
-            Player player = playerSender();
-            MapManager.clear(player.getInventory(), map);
+        if (arguments.size() < 1) {
+            throwInvalidArgument(I.t("Too few parameters!"));
+            return;
+        }
 
-            try
-            {
-                MapManager.deleteMap(map);
-                info(I.t("Map successfully deleted."));
+        final String playerName;
+        final String mapName;
+        final Player sender = playerSender();
+        if (arguments.size() == 2 || arguments.size() == 3) {
+            if (!Permissions.DELETEOTHER.grantedTo(sender)) {
+                throwNotAuthorized();
+                return;
             }
-            catch (MapManagerException ex)
-            {
-                PluginLogger.warning(I.t("A non-existent map was requested to be deleted", ex));
-                warning(I.t("This map does not exist."));
-            }
+
+            playerName = arguments.get(0);
+            mapName = arguments.get(1);
+        } else {
+            playerName = sender.getName();
+            mapName = arguments.get(0);
         }
+
+        retrieveUUID(playerName, uuid -> {
+            ImageMap map = MapManager.getMap(uuid, mapName);
+
+            if (map == null) {
+                warning(sender, I.t("This map does not exist."));
+                return;
+            }
+
+            if (!confirm) {
+                RawText msg = deleteMsg(getClass(), playerName, map);
+                RawMessage.send(sender, msg);
+            } else {
+                if (sender != null && sender.isOnline() && sender.getInventory() != null) {
+                    MapManager.clear(sender.getInventory(), map);
+                }
+
+                try {
+                    MapManager.deleteMap(map);
+                    success(sender, I.t("Map successfully deleted."));
+                } catch (MapManagerException ex) {
+                    PluginLogger.warning(I.t("A non-existent map was requested to be deleted", ex));
+                    warning(sender, I.t("This map does not exist."));
+                }
+            }
+        });
+
+
     }
-    
+
     @Override
-    protected List<String> complete() throws CommandException
-    {
-        if(args.length == 1) 
+    protected List<String> complete() throws CommandException {
+        if (args.length == 1) {
             return getMatchingMapNames(playerSender(), args[0]);
+        }
 
         return null;
     }
 
     @Override
-    public boolean canExecute(CommandSender sender)
-    {
+    public boolean canExecute(CommandSender sender) {
         return Permissions.DELETE.grantedTo(sender);
     }
 }

@@ -48,12 +48,17 @@ import fr.zcraft.quartzlib.components.worker.Worker;
 import fr.zcraft.quartzlib.components.worker.WorkerAttributes;
 import fr.zcraft.quartzlib.components.worker.WorkerCallback;
 import fr.zcraft.quartzlib.components.worker.WorkerRunnable;
+<<<<<<< HEAD
 import fr.zcraft.quartzlib.tools.text.ActionBar;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+
+import javax.imageio.ImageIO;
+=======
+>>>>>>> 900cc7512b299f6cdcbe46b9c00a690a46675898
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -163,6 +168,7 @@ public class ImageRendererExecutor extends Worker {
         }, callback);
     }
 
+<<<<<<< HEAD
     static public void renderLatex(final String latexRaw, Player player, final ImageUtils.ScalingType scaling, final UUID playerUUID, final int width, final int height, WorkerCallback<ImageMap> callback)
     {
         submitQuery(new WorkerRunnable<ImageMap>()
@@ -226,10 +232,16 @@ public class ImageRendererExecutor extends Worker {
             }
         }, callback);
     }
+
+    public static void update(final URL url, final ImageUtils.ScalingType scaling, final UUID playerUUID, final ImageMap map, final int width, final int height, WorkerCallback<ImageMap> callback) {
+        submitQuery(new WorkerRunnable<ImageMap>()
+        {
+=======
     public static void update(final URL url, final ImageUtils.ScalingType scaling, final UUID playerUUID,
                               final ImageMap map, final int width, final int height,
                               WorkerCallback<ImageMap> callback) {
         submitQuery(new WorkerRunnable<ImageMap>() {
+>>>>>>> 900cc7512b299f6cdcbe46b9c00a690a46675898
             @Override
             public ImageMap run() throws Throwable {
                 final URLConnection connection = connecting(url);

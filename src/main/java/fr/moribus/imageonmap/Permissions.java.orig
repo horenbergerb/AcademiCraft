@@ -43,8 +43,13 @@ import java.util.Set;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
-public enum Permissions {
+<<<<<<< HEAD
+public enum Permissions
+{
     LATEX("imageonmap.latex"),
+=======
+public enum Permissions {
+>>>>>>> 900cc7512b299f6cdcbe46b9c00a690a46675898
     NEW("imageonmap.new", "imageonmap.userender"),
     LIST("imageonmap.list"),
     LISTOTHER("imageonmap.listother"),

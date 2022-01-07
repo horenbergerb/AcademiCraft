@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,106 +31,148 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
+
 package fr.moribus.imageonmap.commands;
 
+import fr.moribus.imageonmap.PluginConfiguration;
 import fr.moribus.imageonmap.map.ImageMap;
 import fr.moribus.imageonmap.map.MapManager;
 import fr.zcraft.quartzlib.components.commands.Command;
 import fr.zcraft.quartzlib.components.commands.CommandException;
 import fr.zcraft.quartzlib.components.i18n.I;
-import org.bukkit.entity.Player;
-
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 
-public abstract class IoMCommand extends Command
-{
-	protected ImageMap getMapFromArgs() throws CommandException
-	{
-		return getMapFromArgs(playerSender(), 0, true);
-	}
-//TODO:Add the quote system to zlib and refactor this
-	protected ImageMap getMapFromArgs(Player player, int index) throws CommandException
-	{
-		if(args.length <= index) throwInvalidArgument(I.t("You need to give a map name."));
+public abstract class IoMCommand extends Command {
 
-		ImageMap map;
-		String mapName = args[index];
-		for (int i = index + 1, c = args.length; i < c; i++) {
-			mapName += " " + args[i];
-		}
-		String regex="((\"([^\\\"]*(\\\\\\\")*)*([^\\\\\\\"]\"))|([^\\\"\\s\\\\]*(\\\\\\s)*[\\\\]*)*\"?)";
+    protected boolean checkHostnameWhitelist(final URL url) {
+        final List<String> hostnames = PluginConfiguration.IMAGES_HOSTNAMES_WHITELIST.get()
+                .stream()
+                .map(String::trim)
+                .filter(h -> !h.isEmpty())
+                .collect(Collectors.toList());
 
-		 Pattern pattern=Pattern.compile(regex);
-		 Matcher matcher=pattern.matcher(mapName);
+        if (hostnames.isEmpty()) {
+            return true;
+        }
 
-		StringBuilder result = new StringBuilder();
+        return hostnames
+                .stream()
+                .map(h -> h.replaceAll("https://", "").replaceAll("http://", ""))
+                .anyMatch(h -> h.equalsIgnoreCase(url.getHost()));
+    }
 
-		matcher.find();
-		result.append(matcher.group(0));
-		if(result!=null)
-			if(result.charAt(0)=='\"')
-				if(result.length()==1){
-					result.deleteCharAt(0);
-				}
-		 		else
-		 			if(result.charAt(result.length()-1)=='\"') {
-			 			result=result.deleteCharAt(result.length() - 1);
-						if(result!=null&&!result.equals("")&&result.charAt(0)=='\"')
-			 				mapName=result.deleteCharAt(0).toString();
+    protected void retrieveUUID(final String arg, final Consumer<UUID> consumer) {
+        // If it is being removed we may have to use Mojang services
+        consumer.accept(Bukkit.getOfflinePlayer(arg).getUniqueId());
+    }
 
-		 		}
+    protected ImageMap getMapFromArgs() throws CommandException {
+        return getMapFromArgs(playerSender(), 0, true);
+    }
+
+    protected ImageMap getMapFromArgs(final Player player, final int index, boolean expand) throws CommandException {
+        if (args.length <= index) {
+            throwInvalidArgument(I.t("You need to give a map name."));
+        }
+
+        ImageMap map;
+        String mapName = args[index];
+
+        if (expand) {
+            for (int i = index + 1, c = args.length; i < c; i++) {
+                mapName += " " + args[i];
+            }
+        }
+
+        mapName = mapName.trim();
+        map = MapManager.getMap(player.getUniqueId(), mapName);
+
+        if (map == null) {
+            error(I.t("This map does not exist."));
+        }
+
+        return map;
+    }
+
+    protected ArrayList<String> getArgs() {
+        ArrayList<String> arguments = new ArrayList<>();
+
+        //State of the automaton, can read word like:
+        //name_here; "name here"
+        int state = 0;
+        StringBuilder s = new StringBuilder();
+
+        for (String arg : args) {
+            if (arg.startsWith("http:") || arg.startsWith("https:")) {
+                arguments.add(arg);
+                continue;
+            }
+            if (state == 0) {
+                s = new StringBuilder();
+            } else {
+                s.append(" ");
+            }
+            for (char c : arg.toCharArray()) {
+                switch (state) {
+                    case 0:
+                        if (c == '\"') {
+                            state = 1;
+                        } else {
+                            //If we read a : that means that we are on a new argument example:"hello"
+                            if (c == ':') {
+                                arguments.add(s.toString());
+                                s = new StringBuilder();
+                            } else {
+                                s = s.append(c);
+                            }
+                        }
+                        break;
+                    case 1:
+                        if (c == '\"') {
+                            arguments.add(s.toString());
+                            s = new StringBuilder();
+                            state = 0;
+                        } else {
+                            s = s.append(c);
+                        }
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + state);
+                }
+            }
+            if (s.length() > 0 && state != 1) {
+                arguments.add(s.toString());
+            }
+
+        }
+        return arguments;
+    }
 
 
-		mapName = mapName.trim();
+    protected List<String> getMatchingMapNames(Player player, String prefix) {
+        return getMatchingMapNames(MapManager.getMapList(player.getUniqueId()), prefix);
+    }
 
-		map = MapManager.getMap(player.getUniqueId(), mapName);
+    protected List<String> getMatchingMapNames(Iterable<? extends ImageMap> maps, String prefix) {
+        List<String> matches = new ArrayList<>();
 
-		if(map == null) error(I.t("This map does not exist."));
-		return map;
-	}
-	protected ImageMap getMapFromArgs(Player player, int index, boolean expand) throws CommandException
-	{
-		if(args.length <= index) throwInvalidArgument(I.t("You need to give a map name."));
+        for (ImageMap map : maps) {
+            if (map.getId().startsWith(prefix)) {
+                matches.add(map.getId());
+            }
+        }
 
-		ImageMap map;
-		String mapName = args[index];
-
-		if(expand)
-		{
-			for(int i = index + 1, c = args.length; i < c; i++)
-			{
-				mapName += " " + args[i];
-			}
-		}
-
-		mapName = mapName.trim();
-		map = MapManager.getMap(player.getUniqueId(), mapName);
-
-		if(map == null) error(I.t("This map does not exist."));
-
-		return map;
-	}
-
-	protected List<String> getMatchingMapNames(Player player, String prefix)
-	{
-		return getMatchingMapNames(MapManager.getMapList(player.getUniqueId()), prefix);
-	}
-
-	protected List<String> getMatchingMapNames(Iterable<? extends ImageMap> maps, String prefix)
-	{
-		List<String> matches = new ArrayList<>();
-
-		for(ImageMap map : maps)
-		{
-			if(map.getId().startsWith(prefix)) matches.add(map.getId());
-		}
-
-		return matches;
-	}
+        return matches;
+    }
 }

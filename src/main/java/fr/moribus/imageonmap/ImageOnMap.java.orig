@@ -62,11 +62,21 @@ import java.io.File;
 import java.io.IOException;
 import org.bstats.bukkit.Metrics;
 
+<<<<<<< HEAD
+public final class ImageOnMap extends QuartzPlugin
+{
+    static private final String IMAGES_DIRECTORY_NAME = "images";
+    static private final String LATEX_DIRECTORY_NAME = "latex";
+    static private final String MAPS_DIRECTORY_NAME = "maps";
+    static private ImageOnMap plugin;
+    private File imagesDirectory;
+    private File latexDirectory;
+=======
 public final class ImageOnMap extends QuartzPlugin {
     private static final String IMAGES_DIRECTORY_NAME = "images";
-    private static final String LATEX_DIRECTORY_NAME = "latex";
     private static final String MAPS_DIRECTORY_NAME = "maps";
     private static ImageOnMap plugin;
+>>>>>>> 900cc7512b299f6cdcbe46b9c00a690a46675898
     private final File mapsDirectory;
     private File imagesDirectory;
     private CommandWorkers commandWorker;
@@ -81,17 +91,22 @@ public final class ImageOnMap extends QuartzPlugin {
     public static ImageOnMap getPlugin() {
         return plugin;
     }
+<<<<<<< HEAD
+    
+    public File getImagesDirectory() {return imagesDirectory;}
+    public File getMapsDirectory() {return mapsDirectory;}
+    public File getLatexDirectory() {return latexDirectory;}
+    public File getImageFile(int mapID)
+    {
+        return new File(imagesDirectory, "map"+mapID+".png");
+=======
 
     public File getImagesDirectory() {
         return imagesDirectory;
     }
 
-    public File getLatexDirectory() {
-		return latexDirectory;
-	}
-
     public File getMapsDirectory() {
-		return mapsDirectory;
+        return mapsDirectory;
     }
 
     public File getImageFile(int mapID) {
@@ -100,6 +115,7 @@ public final class ImageOnMap extends QuartzPlugin {
 
     public CommandWorkers getCommandWorker() {
         return commandWorker;
+>>>>>>> 900cc7512b299f6cdcbe46b9c00a690a46675898
     }
 
     @SuppressWarnings("unchecked")
@@ -109,9 +125,15 @@ public final class ImageOnMap extends QuartzPlugin {
         try {
             //imagesDirectory = checkPluginDirectory(imagesDirectory, V3Migrator.getOldImagesDirectory(this));
             checkPluginDirectory(mapsDirectory);
+<<<<<<< HEAD
             checkPluginDirectory(latexDirectory);
+        }
+        catch(final IOException ex)
+        {
+=======
             checkPluginDirectory(imagesDirectory);
         } catch (final IOException ex) {
+>>>>>>> 900cc7512b299f6cdcbe46b9c00a690a46675898
             PluginLogger.error("FATAL: " + ex.getMessage());
             this.setEnabled(false);
             return;

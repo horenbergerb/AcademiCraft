@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,44 +31,40 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap.map;
 
 import fr.zcraft.quartzlib.components.i18n.I;
-
 import java.text.MessageFormat;
 
-public class MapManagerException extends Exception
-{
-    public enum Reason
-    {
-        MAXIMUM_PLAYER_MAPS_EXCEEDED(I.t("You have too many maps (maximum : {0}).")),
-        MAXIMUM_SERVER_MAPS_EXCEEDED(I.t("The server ImageOnMap limit has been reached.")),
-        IMAGEMAP_DOES_NOT_EXIST(I.t("The given map does not exist."));
-        
-        private final String reasonString;
-
-        Reason(String reasonString)
-        {
-            this.reasonString = reasonString;
-        }
-        
-        public String getReasonString(Object ...arguments)
-        {
-            return MessageFormat.format(reasonString, arguments);
-        }
-    }
-
-
+public class MapManagerException extends Exception {
     private final Reason reason;
-    
-    public MapManagerException(Reason reason, Object ...arguments)
-    {
+
+
+    public MapManagerException(Reason reason, Object... arguments) {
         super(reason.getReasonString(arguments));
         this.reason = reason;
     }
+
+    public Reason getReason() {
+        return reason;
+    }
     
-    public Reason getReason() { return reason; }
+    public enum Reason {
+        MAXIMUM_PLAYER_MAPS_EXCEEDED(I.t("You have too many maps (maximum : {0}).")),
+        MAXIMUM_SERVER_MAPS_EXCEEDED(I.t("The server ImageOnMap limit has been reached.")),
+        IMAGEMAP_DOES_NOT_EXIST(I.t("The given map does not exist."));
+
+        private final String reasonString;
+
+        Reason(String reasonString) {
+            this.reasonString = reasonString;
+        }
+
+        public String getReasonString(Object... arguments) {
+            return MessageFormat.format(reasonString, arguments);
+        }
+    }
 }

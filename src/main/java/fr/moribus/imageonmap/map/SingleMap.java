@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,60 +31,51 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap.map;
 
-import org.bukkit.configuration.InvalidConfigurationException;
-
 import java.util.Map;
 import java.util.UUID;
+import org.bukkit.configuration.InvalidConfigurationException;
 
-public class SingleMap extends ImageMap
-{
+public class SingleMap extends ImageMap {
     protected final int mapID;
-    
-    public SingleMap(UUID ownerUUID, int mapID, String id, String name)
-    {
+
+    public SingleMap(UUID ownerUUID, int mapID, String id, String name) {
         super(ownerUUID, Type.SINGLE, id, name);
         this.mapID = mapID;
     }
-    
-    public SingleMap(UUID ownerUUID, int mapID)
-    {
+
+    public SingleMap(UUID ownerUUID, int mapID) {
         this(ownerUUID, mapID, null, null);
     }
-    
-    @Override
-    public int[] getMapsIDs()
-    {
-        return new int[]{mapID};
-    }
 
-    @Override
-    public boolean managesMap(int mapID)
-    {
-        return this.mapID == mapID;
-    }
-    
-    @Override
-    public int getMapCount()
-    {
-        return 1;
-    }
-    
-    /* ====== Serialization methods ====== */
-    
-    public SingleMap(Map<String, Object> map, UUID userUUID) throws InvalidConfigurationException
-    {
+    public SingleMap(Map<String, Object> map, UUID userUUID) throws InvalidConfigurationException {
         super(map, userUUID, Type.SINGLE);
         mapID = getFieldValue(map, "mapID");
     }
-    
+
     @Override
-    protected void postSerialize(Map<String, Object> map)
-    {
+    public int[] getMapsIDs() {
+        return new int[] {mapID};
+    }
+
+    @Override
+    public boolean managesMap(int mapID) {
+        return this.mapID == mapID;
+    }
+
+    /* ====== Serialization methods ====== */
+
+    @Override
+    public int getMapCount() {
+        return 1;
+    }
+
+    @Override
+    protected void postSerialize(Map<String, Object> map) {
         map.put("mapID", mapID);
     }
 

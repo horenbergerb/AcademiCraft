@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,7 +31,7 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap.commands.maptool;
@@ -45,35 +45,29 @@ import fr.zcraft.quartzlib.components.i18n.I;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@CommandInfo (name = "getremaining", aliases = {"getrest"})
-public class GetRemainingCommand extends IoMCommand
-{
+@CommandInfo(name = "getremaining", aliases = {"getrest"})
+public class GetRemainingCommand extends IoMCommand {
     @Override
-    protected void run() throws CommandException
-    {
+    protected void run() throws CommandException {
         Player player = playerSender();
-        
-        if(MapItemManager.getCacheSize(player) <= 0)
-        {
+
+        if (MapItemManager.getCacheSize(player) <= 0) {
             info(I.t("You have no remaining map."));
             return;
         }
-        
+
         int givenMaps = MapItemManager.giveCache(player);
-        
-        if(givenMaps == 0)
-        {
+
+        if (givenMaps == 0) {
             error(I.t("Your inventory is full! Make some space before requesting the remaining maps."));
-        }
-        else
-        {
-            info(I.tn("There is {0} map remaining.", "There are {0} maps remaining.", MapItemManager.getCacheSize(player)));
+        } else {
+            info(I.tn("There is {0} map remaining.", "There are {0} maps remaining.",
+                    MapItemManager.getCacheSize(player)));
         }
     }
 
     @Override
-    public boolean canExecute(CommandSender sender)
-    {
+    public boolean canExecute(CommandSender sender) {
         return Permissions.NEW.grantedTo(sender) || Permissions.GET.grantedTo(sender);
     }
 }

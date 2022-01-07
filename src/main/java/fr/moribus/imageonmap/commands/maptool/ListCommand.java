@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,7 +31,7 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap.commands.maptool;
@@ -47,44 +47,65 @@ import fr.zcraft.quartzlib.components.i18n.I;
 import fr.zcraft.quartzlib.components.rawtext.RawText;
 import fr.zcraft.quartzlib.components.rawtext.RawTextPart;
 import fr.zcraft.quartzlib.tools.text.RawMessage;
+import java.util.ArrayList;
+import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
-
-@CommandInfo (name = "list")
-public class ListCommand extends IoMCommand
-{
+@CommandInfo(name = "list", usageParameters = "[player name]")
+public class ListCommand extends IoMCommand {
     @Override
-    protected void run() throws CommandException
-    {
-        Player player = playerSender();
-        List<ImageMap> mapList = MapManager.getMapList(player.getUniqueId());
-        
-        if(mapList.isEmpty())
-        {
-            info(I.t("No map found."));
+    protected void run() throws CommandException {
+        ArrayList<String> arguments = getArgs();
+        if (arguments.size() > 1) {
+            throwInvalidArgument(I.t("Too many parameters!"));
             return;
         }
-        
-        info(I.tn("{white}{bold}{0} map found.", "{white}{bold}{0} maps found.", mapList.size()));
 
-        RawTextPart rawText = new RawText("");
-        rawText = addMap(rawText, mapList.get(0));
+        String playerName;
+        if (arguments.size() == 1) {
+            if (!Permissions.LISTOTHER.grantedTo(sender)) {
+                throwNotAuthorized();
+                return;
+            }
 
-        for(int i = 1, c = mapList.size(); i < c; i++)
-        {
-            rawText = rawText.then(", ").color(ChatColor.GRAY);
-            rawText = addMap(rawText, mapList.get(i));
+            playerName = arguments.get(0);
+        } else {
+            playerName = playerSender().getName();
         }
 
-        RawMessage.send(player, rawText.build());
+        final Player sender = playerSender();
+
+
+        retrieveUUID(playerName, uuid -> {
+            List<ImageMap> mapList = MapManager.getMapList(uuid);
+            if (mapList.isEmpty()) {
+                info(sender, I.t("No map found."));
+                return;
+            }
+            String message = I.tn("{white}{bold}{0} map found.",
+                    "{white}{bold}{0} maps found.",
+                    mapList.size());
+
+            info(sender, I.tn("{white}{bold}{0} map found.", "{white}{bold}{0} maps found.", mapList.size()));
+
+            RawTextPart rawText = new RawText("");
+            rawText = addMap(rawText, mapList.get(0));
+
+            //TODO pagination chat
+            for (int i = 1, c = mapList.size(); i < c; i++) {
+                rawText = rawText.then(", ").color(ChatColor.GRAY);
+                rawText = addMap(rawText, mapList.get(i));
+            }
+            RawMessage.send(sender, rawText.build());
+
+        });
     }
 
-    private RawTextPart<?> addMap(RawTextPart<?> rawText, ImageMap map)
-    {
-        final String size = map.getType() == ImageMap.Type.SINGLE ? "1 × 1" : ((PosterMap) map).getColumnCount() + " × " + ((PosterMap) map).getRowCount();
+    private RawTextPart<?> addMap(RawTextPart<?> rawText, ImageMap map) {
+        final String size = map.getType() == ImageMap.Type.SINGLE ? "1 × 1" :
+                ((PosterMap) map).getColumnCount() + " × " + ((PosterMap) map).getRowCount();
 
         return rawText
                 .then(map.getId())
@@ -95,19 +116,10 @@ public class ListCommand extends IoMCommand
                         .then(map.getId() + ", " + size).color(ChatColor.GRAY).then("\n\n")
                         .then(I.t("{white}Click{gray} to get this map"))
                 );
-                /*.hover(new ItemStackBuilder(Material.FILLED_MAP)
-                                .title(ChatColor.GREEN + "" + ChatColor.BOLD + map.getName())
-                                .lore(ChatColor.GRAY + map.getId() + ", " + size)
-                                .lore("")
-                                .lore(I.t("{white}Click{gray} to get this map"))
-                                .hideAttributes()
-                                .item()
-                );*/
     }
 
     @Override
-    public boolean canExecute(CommandSender sender)
-    {
+    public boolean canExecute(CommandSender sender) {
         return Permissions.LIST.grantedTo(sender);
     }
 }

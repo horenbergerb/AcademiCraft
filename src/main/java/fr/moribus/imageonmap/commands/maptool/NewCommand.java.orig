@@ -154,6 +154,13 @@ public class NewCommand extends IoMCommand {
         }
         try {
             ActionBar.sendPermanentMessage(player, ChatColor.DARK_GREEN + I.t("Rendering..."));
+<<<<<<< HEAD
+            ImageRendererExecutor.render(url, scaling, player.getUniqueId(), width, height, new WorkerCallback<ImageMap>() {
+                @Override
+                public void finished(ImageMap result) {
+                    ActionBar.removeMessage(player);
+                    MessageSender.sendActionBarMessage(player, ChatColor.DARK_GREEN + I.t("Rendering shmendering!"));
+=======
             ImageRendererExecutor
                     .render(url, scaling, player.getUniqueId(), width, height, new WorkerCallback<ImageMap>() {
                         @Override
@@ -161,6 +168,7 @@ public class NewCommand extends IoMCommand {
                             ActionBar.removeMessage(player);
                             MessageSender
                                     .sendActionBarMessage(player, ChatColor.DARK_GREEN + I.t("Rendering finished!"));
+>>>>>>> 900cc7512b299f6cdcbe46b9c00a690a46675898
 
                             if (result.give(player)
                                     && (result instanceof PosterMap && !((PosterMap) result).hasColumnData())) {

@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,7 +31,7 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap.commands.maptool;
@@ -43,21 +43,50 @@ import fr.moribus.imageonmap.gui.MapListGui;
 import fr.zcraft.quartzlib.components.commands.CommandException;
 import fr.zcraft.quartzlib.components.commands.CommandInfo;
 import fr.zcraft.quartzlib.components.gui.Gui;
+import fr.zcraft.quartzlib.components.i18n.I;
+import fr.zcraft.quartzlib.tools.PluginLogger;
+import java.util.ArrayList;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 
-@CommandInfo (name = "explore")
-public class ExploreCommand extends IoMCommand
-{
-	@Override
-	protected void run() throws CommandException
-	{
-		Gui.open(playerSender(), new MapListGui(playerSender()));
-	}
+@CommandInfo(name = "explore", usageParameters = "[player name]")
+public class ExploreCommand extends IoMCommand {
+    @Override
+    protected void run() throws CommandException {
+        ArrayList<String> arguments = getArgs();
+        if (arguments.size() > 1) {
+            throwInvalidArgument(I.t("Too many parameters!"));
+            return;
+        }
+        final String playerName;
 
-	@Override
-	public boolean canExecute(CommandSender sender)
-	{
-		return Permissions.LIST.grantedTo(sender);
-	}
+        final Player sender = playerSender();
+        if (arguments.size() == 1) {
+            if (!Permissions.LISTOTHER.grantedTo(sender)) {
+                throwNotAuthorized();
+                return;
+            }
+            playerName = arguments.get(0);
+        } else {
+            playerName = sender.getName();
+        }
+
+        retrieveUUID(playerName, uuid -> {
+
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+            if (sender.isOnline()) {
+                Gui.open(sender, new MapListGui(offlinePlayer, playerName));
+            }
+
+        });
+
+    }
+
+    @Override
+    public boolean canExecute(CommandSender sender) {
+        return Permissions.LIST.grantedTo(sender);
+    }
 }

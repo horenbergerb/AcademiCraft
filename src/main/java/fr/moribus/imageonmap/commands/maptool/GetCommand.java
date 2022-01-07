@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,47 +31,88 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap.commands.maptool;
 
-import java.util.List;
-
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
+import fr.moribus.imageonmap.ImageOnMap;
 import fr.moribus.imageonmap.Permissions;
 import fr.moribus.imageonmap.commands.IoMCommand;
+import fr.moribus.imageonmap.map.ImageMap;
+import fr.moribus.imageonmap.map.MapManager;
 import fr.zcraft.quartzlib.components.commands.CommandException;
 import fr.zcraft.quartzlib.components.commands.CommandInfo;
 import fr.zcraft.quartzlib.components.i18n.I;
+import java.util.ArrayList;
+import java.util.List;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-@CommandInfo (name = "get")
-public class GetCommand extends IoMCommand
-{
+@CommandInfo(name = "get",usageParameters = "[player name]:<map name>")
+public class GetCommand extends IoMCommand {
     @Override
-    protected void run() throws CommandException
-    {
-        Player player = playerSender();
-        if(getMapFromArgs().give(player))
-        {
-            info(I.t("The requested map was too big to fit in your inventory."));
-            info(I.t("Use '/maptool getremaining' to get the remaining maps."));
+    protected void run() throws CommandException {
+        ArrayList<String> arguments = getArgs();
+
+        if (arguments.size() > 2) {
+            throwInvalidArgument(I.t("Too many parameters!"));
+            return;
         }
+        if (arguments.size() < 1) {
+            throwInvalidArgument(I.t("Too few parameters!"));
+            return;
+        }
+        final String playerName;
+        final String mapName;
+        final Player sender = playerSender();
+
+        if (arguments.size() == 1) {
+            playerName = sender.getName();
+            mapName = arguments.get(0);
+        } else {
+            if (!Permissions.GETOTHER.grantedTo(sender)) {
+                throwNotAuthorized();
+                return;
+            }
+            playerName = arguments.get(0);
+            mapName = arguments.get(1);
+        }
+
+
+
+
+
+        retrieveUUID(playerName, uuid -> {
+
+            if (!sender.isOnline()) {
+                return;
+            }
+
+            ImageMap map = MapManager.getMap(uuid, mapName);
+
+            if (map == null) {
+                warning(sender, I.t("This map does not exist."));
+                return;
+            }
+
+            if (map.give(sender)) {
+                info(I.t("The requested map was too big to fit in your inventory."));
+                info(I.t("Use '/maptool getremaining' to get the remaining maps."));
+            }
+        });
     }
-    
+
     @Override
-    protected List<String> complete() throws CommandException
-    {
-        if(args.length == 1) 
+    protected List<String> complete() throws CommandException {
+        if (args.length == 1) {
             return getMatchingMapNames(playerSender(), args[0]);
+        }
         return null;
     }
 
     @Override
-    public boolean canExecute(CommandSender sender)
-    {
+    public boolean canExecute(CommandSender sender) {
         return Permissions.GET.grantedTo(sender);
     }
 }

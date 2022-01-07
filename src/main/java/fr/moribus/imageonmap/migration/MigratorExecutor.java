@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL-B license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL-B
+ * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,7 +31,7 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL-B license and that you accept its terms.
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap.migration;
@@ -41,39 +41,32 @@ import fr.zcraft.quartzlib.components.i18n.I;
 import fr.zcraft.quartzlib.tools.PluginLogger;
 
 
-public class MigratorExecutor
-{
-    static private Thread migratorThread;
-    
-    static public void migrate()
-    {
-        if(isRunning())
-        {
+public class MigratorExecutor {
+    private static Thread migratorThread;
+
+    public static void migrate() {
+        if (isRunning()) {
             PluginLogger.error(I.t("Migration is already running."));
             return;
         }
         migratorThread = new Thread(new V3Migrator(ImageOnMap.getPlugin()), "ImageOnMap-Migration");
         migratorThread.start();
     }
-    
-    static public boolean isRunning()
-    {
+
+    public static boolean isRunning() {
         return migratorThread != null && migratorThread.isAlive();
     }
-    
-    static public void waitForMigration()
-    {
-        if(isRunning())
-        {
+
+    public static void waitForMigration() {
+        if (isRunning()) {
             PluginLogger.info(I.t("Waiting for migration to finish..."));
 
-            try
-            {
+            try {
                 migratorThread.join();
-            }
-            catch(InterruptedException ex)
-            {
-                PluginLogger.error(I.t("Migration thread has been interrupted while waiting to finish. It may not have ended correctly."));
+            } catch (InterruptedException ex) {
+                PluginLogger.error(I.t(
+                        "Migration thread has been interrupted while waiting to finish."
+                                + " It may not have ended correctly."));
             }
         }
     }

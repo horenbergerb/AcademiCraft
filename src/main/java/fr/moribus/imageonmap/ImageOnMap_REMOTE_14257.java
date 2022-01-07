@@ -64,7 +64,6 @@ import org.bstats.bukkit.Metrics;
 
 public final class ImageOnMap extends QuartzPlugin {
     private static final String IMAGES_DIRECTORY_NAME = "images";
-    private static final String LATEX_DIRECTORY_NAME = "latex";
     private static final String MAPS_DIRECTORY_NAME = "maps";
     private static ImageOnMap plugin;
     private final File mapsDirectory;
@@ -74,7 +73,6 @@ public final class ImageOnMap extends QuartzPlugin {
     public ImageOnMap() {
         imagesDirectory = new File(this.getDataFolder(), IMAGES_DIRECTORY_NAME);
         mapsDirectory = new File(this.getDataFolder(), MAPS_DIRECTORY_NAME);
-        latexDirectory = new File(this.getDataFolder(), LATEX_DIRECTORY_NAME);
         plugin = this;
     }
 
@@ -86,12 +84,8 @@ public final class ImageOnMap extends QuartzPlugin {
         return imagesDirectory;
     }
 
-    public File getLatexDirectory() {
-		return latexDirectory;
-	}
-
     public File getMapsDirectory() {
-		return mapsDirectory;
+        return mapsDirectory;
     }
 
     public File getImageFile(int mapID) {
@@ -109,7 +103,6 @@ public final class ImageOnMap extends QuartzPlugin {
         try {
             //imagesDirectory = checkPluginDirectory(imagesDirectory, V3Migrator.getOldImagesDirectory(this));
             checkPluginDirectory(mapsDirectory);
-            checkPluginDirectory(latexDirectory);
             checkPluginDirectory(imagesDirectory);
         } catch (final IOException ex) {
             PluginLogger.error("FATAL: " + ex.getMessage());
@@ -133,7 +126,6 @@ public final class ImageOnMap extends QuartzPlugin {
 
         Commands.register(
                 "maptool",
-                LatexCommand.class,
                 NewCommand.class,
                 ListCommand.class,
                 GetCommand.class,
@@ -146,7 +138,6 @@ public final class ImageOnMap extends QuartzPlugin {
                 UpdateCommand.class
         );
 
-        Commands.registerShortcut("maptool", LatexCommand.class, "latex");
         Commands.registerShortcut("maptool", NewCommand.class, "tomap");
         Commands.registerShortcut("maptool", ExploreCommand.class, "maps");
         Commands.registerShortcut("maptool", GiveCommand.class, "givemap");

@@ -1,15 +1,15 @@
 /*
  * Copyright or © or Copr. Moribus (2013)
  * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
- * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
- * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2020)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2020)
  *
  * This software is a computer program whose purpose is to allow insertion of
  * custom images in a Minecraft world.
  *
- * This software is governed by the CeCILL license under French law and
+ * This software is governed by the CeCILL-B license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
- * modify and/ or redistribute the software under the terms of the CeCILL
+ * modify and/ or redistribute the software under the terms of the CeCILL-B
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
  *
@@ -31,25 +31,19 @@
  * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
- * knowledge of the CeCILL license and that you accept its terms.
+ * knowledge of the CeCILL-B license and that you accept its terms.
  */
 
 package fr.moribus.imageonmap;
 
 
-import fr.moribus.imageonmap.commands.maptool.DeleteCommand;
-import fr.moribus.imageonmap.commands.maptool.ExploreCommand;
-import fr.moribus.imageonmap.commands.maptool.GetCommand;
-import fr.moribus.imageonmap.commands.maptool.GetRemainingCommand;
-import fr.moribus.imageonmap.commands.maptool.GiveCommand;
-import fr.moribus.imageonmap.commands.maptool.ListCommand;
-import fr.moribus.imageonmap.commands.maptool.NewCommand;
-import fr.moribus.imageonmap.commands.maptool.RenameCommand;
-import fr.moribus.imageonmap.commands.maptool.UpdateCommand;
+import fr.moribus.imageonmap.commands.maptool.*;
 import fr.moribus.imageonmap.image.ImageIOExecutor;
 import fr.moribus.imageonmap.image.ImageRendererExecutor;
 import fr.moribus.imageonmap.image.MapInitEvent;
 import fr.moribus.imageonmap.map.MapManager;
+import fr.moribus.imageonmap.migration.MigratorExecutor;
+import fr.moribus.imageonmap.migration.V3Migrator;
 import fr.moribus.imageonmap.ui.MapItemManager;
 import fr.zcraft.quartzlib.components.commands.CommandWorkers;
 import fr.zcraft.quartzlib.components.commands.Commands;
@@ -58,71 +52,66 @@ import fr.zcraft.quartzlib.components.i18n.I18n;
 import fr.zcraft.quartzlib.core.QuartzPlugin;
 import fr.zcraft.quartzlib.tools.PluginLogger;
 import fr.zcraft.quartzlib.tools.UpdateChecker;
-import java.io.File;
-import java.io.IOException;
 import org.bstats.bukkit.Metrics;
 
-public final class ImageOnMap extends QuartzPlugin {
-    private static final String IMAGES_DIRECTORY_NAME = "images";
-    private static final String LATEX_DIRECTORY_NAME = "latex";
-    private static final String MAPS_DIRECTORY_NAME = "maps";
-    private static ImageOnMap plugin;
-    private final File mapsDirectory;
-    private File imagesDirectory;
-    private CommandWorkers commandWorker;
+import java.io.File;
+import java.io.IOException;
 
-    public ImageOnMap() {
+public final class ImageOnMap extends QuartzPlugin
+{
+    static private final String IMAGES_DIRECTORY_NAME = "images";
+    static private final String LATEX_DIRECTORY_NAME = "latex";
+    static private final String MAPS_DIRECTORY_NAME = "maps";
+    static private ImageOnMap plugin;
+    private File imagesDirectory;
+    private File latexDirectory;
+    private final File mapsDirectory;
+
+    public ImageOnMap()
+    {
         imagesDirectory = new File(this.getDataFolder(), IMAGES_DIRECTORY_NAME);
         mapsDirectory = new File(this.getDataFolder(), MAPS_DIRECTORY_NAME);
         latexDirectory = new File(this.getDataFolder(), LATEX_DIRECTORY_NAME);
         plugin = this;
     }
 
-    public static ImageOnMap getPlugin() {
+    static public ImageOnMap getPlugin()
+    {
         return plugin;
     }
-
-    public File getImagesDirectory() {
-        return imagesDirectory;
+    
+    public File getImagesDirectory() {return imagesDirectory;}
+    public File getMapsDirectory() {return mapsDirectory;}
+    public File getLatexDirectory() {return latexDirectory;}
+    public File getImageFile(int mapID)
+    {
+        return new File(imagesDirectory, "map"+mapID+".png");
     }
-
-    public File getLatexDirectory() {
-		return latexDirectory;
-	}
-
-    public File getMapsDirectory() {
-		return mapsDirectory;
-    }
-
-    public File getImageFile(int mapID) {
-        return new File(imagesDirectory, "map" + mapID + ".png");
-    }
-
-    public CommandWorkers getCommandWorker() {
-        return commandWorker;
-    }
-
-    @SuppressWarnings("unchecked")
+    
+    
+    @SuppressWarnings ("unchecked")
     @Override
-    public void onEnable() {
+    public void onEnable()
+    {
         // Creating the images and maps directories if necessary
-        try {
-            //imagesDirectory = checkPluginDirectory(imagesDirectory, V3Migrator.getOldImagesDirectory(this));
+        try
+        {
+            imagesDirectory = checkPluginDirectory(imagesDirectory, V3Migrator.getOldImagesDirectory(this));
             checkPluginDirectory(mapsDirectory);
             checkPluginDirectory(latexDirectory);
-            checkPluginDirectory(imagesDirectory);
-        } catch (final IOException ex) {
+        }
+        catch(final IOException ex)
+        {
             PluginLogger.error("FATAL: " + ex.getMessage());
             this.setEnabled(false);
             return;
         }
-
-
+        
+        
         saveDefaultConfig();
-        commandWorker = loadComponent(CommandWorkers.class);
-        loadComponents(I18n.class, Gui.class, Commands.class, PluginConfiguration.class, ImageIOExecutor.class,
-                ImageRendererExecutor.class);
 
+        loadComponents(I18n.class, Gui.class, Commands.class, PluginConfiguration.class, ImageIOExecutor.class, ImageRendererExecutor.class, CommandWorkers.class);
+               
         //Init all the things !
         I18n.setPrimaryLocale(PluginConfiguration.LANG.get());
 
@@ -136,55 +125,56 @@ public final class ImageOnMap extends QuartzPlugin {
                 LatexCommand.class,
                 NewCommand.class,
                 ListCommand.class,
+                ListOtherCommand.class,
                 GetCommand.class,
+                GetOtherCommand.class,
                 RenameCommand.class,
                 DeleteCommand.class,
-                GiveCommand.class,
+                DeleteOtherCommand.class,
                 GetRemainingCommand.class,
                 ExploreCommand.class,
-                //MigrateCommand.class,//Removed for now doesn't work nor is useful, maybe useful later on
+                ExploreOtherCommand.class,
+                MigrateCommand.class,
                 UpdateCommand.class
         );
 
         Commands.registerShortcut("maptool", LatexCommand.class, "latex");
         Commands.registerShortcut("maptool", NewCommand.class, "tomap");
         Commands.registerShortcut("maptool", ExploreCommand.class, "maps");
-        Commands.registerShortcut("maptool", GiveCommand.class, "givemap");
 
-        if (PluginConfiguration.CHECK_FOR_UPDATES.get()) {
+        if (PluginConfiguration.CHECK_FOR_UPDATES.get())
+        {
             UpdateChecker.boot("imageonmap.26585");
         }
 
-        if (PluginConfiguration.COLLECT_DATA.get()) {
-            final Metrics metrics = new Metrics(this,5920);
+        if (PluginConfiguration.COLLECT_DATA.get())
+        {
+            final Metrics metrics = new Metrics(this);
+
             metrics.addCustomChart(new Metrics.SingleLineChart("rendered-images", MapManager::getImagesCount));
             metrics.addCustomChart(new Metrics.SingleLineChart("used-minecraft-maps", MapManager::getMapCount));
-        } else {
-            PluginLogger.warning("Collect data disabled");
         }
     }
 
     @Override
-    public void onDisable() {
+    public void onDisable()
+    {
         MapManager.exit();
         MapItemManager.exit();
-        //MigratorExecutor.waitForMigration();//Removed for now doesn't work nor is useful, maybe useful later on
+        MigratorExecutor.waitForMigration();
 
         super.onDisable();
     }
-
-    private File checkPluginDirectory(File primaryFile, File... alternateFiles) throws IOException {
-        if (primaryFile.exists()) {
-            return primaryFile;
+    
+    private File checkPluginDirectory(File primaryFile, File... alternateFiles) throws IOException
+    {
+        if(primaryFile.exists()) return primaryFile;
+        for(File file : alternateFiles)
+        {
+            if(file.exists()) return file;
         }
-        for (File file : alternateFiles) {
-            if (file.exists()) {
-                return file;
-            }
-        }
-        if (!primaryFile.mkdirs()) {
+        if(!primaryFile.mkdirs()) 
             throw new IOException("Could not create '" + primaryFile.getName() + "' plugin directory.");
-        }
         return primaryFile;
     }
 }

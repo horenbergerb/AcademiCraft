@@ -34,24 +34,6 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-/*
- * Copyright (C) 2013 Moribus
- * Copyright (C) 2015 ProkopyL <prokopylmc@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package fr.moribus.imageonmap.commands.maptool;
 
 import fr.moribus.imageonmap.Permissions;
@@ -62,41 +44,85 @@ import fr.zcraft.quartzlib.components.commands.CommandException;
 import fr.zcraft.quartzlib.components.commands.CommandInfo;
 import fr.zcraft.quartzlib.components.i18n.I;
 import java.util.ArrayList;
-import java.util.List;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-@CommandInfo(name = "rename", usageParameters = "<original map name> <new map name>")
-public class RenameCommand extends IoMCommand {
+
+@CommandInfo(name = "give", usageParameters = "<player name> [playerFrom]:<map name>")
+public class GiveCommand extends IoMCommand {
 
     @Override
     protected void run() throws CommandException {
 
-        ArrayList<String> argList = getArgs();
-
-        if (argList.size() != 2) {
-            warning(I.t("Not enough or too many arguments! Usage: /maptool rename <map name> <new map name>"));
+        if (args.length < 2) {
+            throwInvalidArgument(I.t("You must give a valid player name and a map name."));
             return;
         }
 
-        ImageMap map = MapManager.getMap(playerSender().getUniqueId(), argList.get(0));
-        if (map == null) {
-            error(I.t("This map does not exist."));
+        ArrayList<String> arguments = getArgs();
+
+        if (arguments.size() > 3) {
+            throwInvalidArgument(I.t("Too many parameters!"));
             return;
         }
-        map.rename(argList.get(1));
-    }
-
-    @Override
-    protected List<String> complete() throws CommandException {
-
-        if (args.length == 1) {
-            return getMatchingMapNames(playerSender(), args[0]);
+        if (arguments.size() < 1) {
+            throwInvalidArgument(I.t("Too few parameters!"));
+            return;
         }
-        return null;
+        final String mapName;
+        final String from;
+        final String playerName;
+        final Player playerSender;
+        Player playerSender1;
+        try {
+            playerSender1 = playerSender();
+        } catch (CommandException ignored) {
+            if (arguments.size() == 2) {
+                throwInvalidArgument(I.t("Player name is required from the console"));
+            }
+            playerSender1 = null;
+        }
+        playerSender = playerSender1;
+        if (arguments.size() == 2) {
+            from = playerSender.getName();
+            playerName = arguments.get(0);
+            mapName = arguments.get(1);
+        } else {
+            if (arguments.size() == 3) {
+                from = arguments.get(1);
+                playerName = arguments.get(0);
+                mapName = arguments.get(2);
+            } else {
+                from = "";
+                playerName = "";
+                mapName = "";
+            }
+        }
+
+        final Player sender = playerSender();
+
+        retrieveUUID(from, uuid -> {
+            final ImageMap map = MapManager.getMap(uuid, mapName);
+
+            if (map == null) {
+                warning(sender, I.t("This map does not exist."));
+                return;
+            }
+
+            retrieveUUID(playerName, uuid2 -> {
+                if (Bukkit.getPlayer((uuid2)) != null && Bukkit.getPlayer((uuid2)).isOnline()
+                        && map.give(Bukkit.getPlayer(uuid2))) {
+                    info(I.t("The requested map was too big to fit in your inventory."));
+                    info(I.t("Use '/maptool getremaining' to get the remaining maps."));
+                }
+            });
+        });
+
     }
 
     @Override
     public boolean canExecute(CommandSender sender) {
-        return Permissions.RENAME.grantedTo(sender);
+        return Permissions.GIVE.grantedTo(sender);
     }
 }
